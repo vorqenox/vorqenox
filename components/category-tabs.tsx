@@ -1,25 +1,35 @@
 "use client"
 
 import Link from "next/link"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Smartphone, Gamepad2, Brain, CreditCard, ArrowRight } from "lucide-react"
-import type { Article } from "@/lib/data"
-
-const categories = [
-  { key: "all", label: "All", icon: null },
-  { key: "apps", label: "Apps", icon: <Smartphone className="h-4 w-4" /> },
-  { key: "games", label: "Games", icon: <Gamepad2 className="h-4 w-4" /> },
-  { key: "ai-tools", label: "AI Tools", icon: <Brain className="h-4 w-4" /> },
-  {
-    key: "gift-cards",
-    label: "Gift Cards",
-    icon: <CreditCard className="h-4 w-4" />,
-  },
-]
+import type { Article, SiteSettings } from "@/lib/data"
 
 export function CategoryTabs({ articles }: { articles: Article[] }) {
   const [active, setActive] = useState("all")
+  const [settings, setSettings] = useState<SiteSettings | null>(null)
+
+  useEffect(() => {
+    fetch("/api/settings")
+      .then((r) => r.json())
+      .then(setSettings)
+      .catch(() => {})
+  }, [])
+
+  const coursesLabel = settings?.labels?.coursesLabel || "اشتراكات"
+
+  const categories = [
+    { key: "all", label: "All", icon: null },
+    { key: "apps", label: "Apps", icon: <Smartphone className="h-4 w-4" /> },
+    { key: "games", label: "Games", icon: <Gamepad2 className="h-4 w-4" /> },
+    { key: "ai-tools", label: "AI Tools", icon: <Brain className="h-4 w-4" /> },
+    {
+      key: "gift-cards",
+      label: coursesLabel,
+      icon: <CreditCard className="h-4 w-4" />,
+    },
+  ]
 
   const filtered =
     active === "all"

@@ -19,15 +19,51 @@ export interface Article {
   updatedAt: string
 }
 
+export interface InternalAd {
+  id: string
+  title: string
+  imageUrl: string
+  cpaLink: string
+  enabled: boolean
+}
+
+export interface CardStyle {
+  neonIntensity: number
+  neonColor: string
+  useGlobalColor: boolean
+  showOnHome: boolean
+  showOnArticles: boolean
+}
+
 export interface SiteSettings {
   siteName: string
   logoUrl: string
   neonColor: string
+  supportEmail: string
   socialLinks: {
     twitter: string
     telegram: string
     youtube: string
     instagram: string
+    linkedin: string
+    linkedinEnabled: boolean
+  }
+  seo: {
+    siteTitle: string
+    metaDescription: string
+    faviconUrl: string
+    fbPixel: string
+    googleAnalytics: string
+  }
+  adToggles: {
+    homeAds: boolean
+    articleAds: boolean
+    landingAds: boolean
+  }
+  internalAds: InternalAd[]
+  cardStyle: CardStyle
+  labels: {
+    coursesLabel: string
   }
 }
 
@@ -229,11 +265,37 @@ const defaultSettings: SiteSettings = {
   siteName: "Vorqenox",
   logoUrl: "",
   neonColor: "#00f3ff",
+  supportEmail: "Vorqenox@gmail.com",
   socialLinks: {
     twitter: "",
     telegram: "",
     youtube: "",
     instagram: "",
+    linkedin: "",
+    linkedinEnabled: false,
+  },
+  seo: {
+    siteTitle: "Vorqenox - The Ultimate Destination for Premium Apps & Tools",
+    metaDescription: "Discover premium apps, games, AI tools, and gift cards. Vorqenox is your ultimate destination for the best digital products and exclusive offers.",
+    faviconUrl: "",
+    fbPixel: "",
+    googleAnalytics: "",
+  },
+  adToggles: {
+    homeAds: true,
+    articleAds: true,
+    landingAds: true,
+  },
+  internalAds: [],
+  cardStyle: {
+    neonIntensity: 50,
+    neonColor: "#00f3ff",
+    useGlobalColor: true,
+    showOnHome: true,
+    showOnArticles: true,
+  },
+  labels: {
+    coursesLabel: "اشتراكات",
   },
 }
 

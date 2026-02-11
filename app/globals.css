@@ -87,6 +87,17 @@
   100% { background-position: 200% 0; }
 }
 
+@keyframes red-neon-blink {
+  0%, 100% {
+    box-shadow: 0 0 8px #ff2020, 0 0 16px rgba(255,32,32,0.3);
+    border-color: #ff2020;
+  }
+  50% {
+    box-shadow: 0 0 4px #ff2020, 0 0 8px rgba(255,32,32,0.15);
+    border-color: #ff404080;
+  }
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;

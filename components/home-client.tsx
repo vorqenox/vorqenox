@@ -15,12 +15,12 @@ export function HomeClient({ articles }: { articles: Article[] }) {
       <Header />
 
       <main className="flex-1">
-        <AdSlot position="top" />
+        <AdSlot position="top" page="home" />
         <HeroCards articles={articles} />
         <SwiperSection articles={articles} />
-        <AdSlot position="middle" />
+        <AdSlot position="middle" page="home" />
         <CategoryTabs articles={articles} />
-        <AdSlot position="bottom" />
+        <AdSlot position="bottom" page="home" />
       </main>
 
       <Footer />

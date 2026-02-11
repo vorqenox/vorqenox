@@ -1,12 +1,20 @@
 "use client"
 
 import Link from "next/link"
+import { Linkedin } from "lucide-react"
 import { useState, useEffect } from "react"
+import type { SiteSettings } from "@/lib/data"
 
 export function Footer() {
   const [year, setYear] = useState<number | null>(null)
+  const [settings, setSettings] = useState<SiteSettings | null>(null)
+
   useEffect(() => {
     setYear(new Date().getFullYear())
+    fetch("/api/settings")
+      .then((r) => r.json())
+      .then(setSettings)
+      .catch(() => {})
   }, [])
   return (
     <footer className="border-t border-border/50 bg-card">
@@ -57,12 +65,25 @@ export function Footer() {
             <h3 className="mb-3 text-sm font-semibold text-foreground">
               Contact
             </h3>
-            <a
-              href="mailto:Vorqenox@gmail.com"
-              className="text-sm text-primary transition-opacity hover:opacity-80"
-            >
-              Vorqenox@gmail.com
-            </a>
+            <div className="flex flex-col gap-2">
+              <a
+                href={`mailto:${settings?.supportEmail || "Vorqenox@gmail.com"}`}
+                className="text-sm text-primary transition-opacity hover:opacity-80"
+              >
+                {settings?.supportEmail || "Vorqenox@gmail.com"}
+              </a>
+              {settings?.socialLinks?.linkedinEnabled && settings?.socialLinks?.linkedin && (
+                <a
+                  href={settings.socialLinks.linkedin}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-primary"
+                >
+                  <Linkedin className="h-4 w-4" />
+                  LinkedIn
+                </a>
+              )}
+            </div>
           </div>
         </div>
 
