@@ -2,8 +2,8 @@
 
 import Link from "next/link"
 import { Linkedin } from "lucide-react"
-import { useState, useEffect }
-import type { SiteSettings } from "@/lib/data" from "react"
+import { useState, useEffect } from "react"
+import type { SiteSettings } from "@/lib/data"
 
 export function Footer() {
   const [year, setYear] = useState<number | null>(null)
