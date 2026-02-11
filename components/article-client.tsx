@@ -45,7 +45,7 @@ export function ArticleClient({
       <Header />
 
       <main className="flex-1">
-        {article.enableAds && <AdSlot position="top" />}
+        {article.enableAds && <AdSlot position="top" page="article" />}
 
         <div className="mx-auto max-w-4xl px-4 py-8">
           <motion.div
@@ -134,7 +134,7 @@ export function ArticleClient({
               </div>
             </div>
 
-            {article.enableAds && <AdSlot position="middle" />}
+            {article.enableAds && <AdSlot position="middle" page="article" />}
 
             {/* Countdown Engine */}
             {article.enableTimer && (
@@ -146,7 +146,7 @@ export function ArticleClient({
               </div>
             )}
 
-            {article.enableAds && <AdSlot position="bottom" />}
+            {article.enableAds && <AdSlot position="bottom" page="article" />}
 
             {/* Related articles */}
             {relatedArticles.length > 0 && (

@@ -15,6 +15,7 @@ export function CountdownEngine({
   const [totalTime, setTotalTime] = useState(0)
   const [timeLeft, setTimeLeft] = useState(0)
   const [isComplete, setIsComplete] = useState(false)
+  const [email, setEmail] = useState("")
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   // Generate random time only on client after mount to avoid hydration mismatch
@@ -141,14 +142,41 @@ export function CountdownEngine({
 
       <div className="p-6">
         {isComplete ? (
-          <Link
-            href={`/bridge/${articleSlug}`}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3.5 text-sm font-bold text-primary-foreground transition-all hover:opacity-90"
-            style={{ animation: "neon-pulse 2s ease-in-out infinite" }}
-          >
-            <Shield className="h-4 w-4" />
-            Access Download
-          </Link>
+          <div className="space-y-4">
+            {/* Email Capture - Red Neon Blink */}
+            <div
+              className="rounded-xl border p-4"
+              style={{
+                borderColor: "#ff2020",
+                boxShadow: "0 0 8px #ff2020, 0 0 16px rgba(255,32,32,0.3)",
+                animation: "red-neon-blink 1.5s ease-in-out infinite",
+              }}
+            >
+              <p
+                className="mb-3 text-center text-xs font-bold"
+                style={{ color: "#ff4444" }}
+                dir="rtl"
+              >
+                {"تنبيه: أدخل بريدك الشخصي لضمان استلام كود التفعيل فوراً"}
+              </p>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="your@email.com"
+                className="w-full rounded-lg border border-border bg-secondary px-3 py-2.5 text-center text-sm text-foreground placeholder:text-muted-foreground focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                dir="ltr"
+              />
+            </div>
+            <Link
+              href={`/bridge/${articleSlug}`}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3.5 text-sm font-bold text-primary-foreground transition-all hover:opacity-90"
+              style={{ animation: "neon-pulse 2s ease-in-out infinite" }}
+            >
+              <Shield className="h-4 w-4" />
+              Access Download
+            </Link>
+          </div>
         ) : (
           <div className="flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-secondary py-3.5 text-sm font-medium text-muted-foreground">
             <Lock className="h-4 w-4" />

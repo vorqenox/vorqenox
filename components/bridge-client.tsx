@@ -9,6 +9,7 @@ import type { Article } from "@/lib/data"
 export function BridgeClient({ article }: { article: Article }) {
   const [timeLeft, setTimeLeft] = useState(10)
   const [isReady, setIsReady] = useState(false)
+  const [email, setEmail] = useState("")
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
@@ -111,6 +112,7 @@ export function BridgeClient({ article }: { article: Article }) {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
+                className="space-y-4"
               >
                 <a
                   href={article.downloadUrl}
@@ -124,7 +126,34 @@ export function BridgeClient({ article }: { article: Article }) {
                   <ExternalLink className="h-5 w-5" />
                   Download Now
                 </a>
-                <div className="mt-4 flex items-center justify-center gap-2 text-xs text-muted-foreground">
+
+                {/* Email Capture - Blinking Red Neon */}
+                <div
+                  className="rounded-xl border p-4"
+                  style={{
+                    borderColor: "#ff2020",
+                    boxShadow: "0 0 8px #ff2020, 0 0 16px rgba(255,32,32,0.3)",
+                    animation: "red-neon-blink 1.5s ease-in-out infinite",
+                  }}
+                >
+                  <p
+                    className="mb-3 text-center text-xs font-bold"
+                    style={{ color: "#ff4444" }}
+                    dir="rtl"
+                  >
+                    {"تنبيه: أدخل بريدك الشخصي لضمان استلام كود التفعيل فوراً"}
+                  </p>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="your@email.com"
+                    className="w-full rounded-lg border border-border bg-secondary px-3 py-2.5 text-center text-sm text-foreground placeholder:text-muted-foreground focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                    dir="ltr"
+                  />
+                </div>
+
+                <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
                   <Shield className="h-3.5 w-3.5 text-primary" />
                   <span>Secured and verified link</span>
                 </div>
