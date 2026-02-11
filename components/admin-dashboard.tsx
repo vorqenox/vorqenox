@@ -19,10 +19,15 @@ import {
   ChevronDown,
   Check,
   AlertCircle,
+  Search as SearchIcon,
+  Megaphone,
+  CreditCard,
+  BarChart3,
+  Linkedin,
 } from "lucide-react"
-import type { Article, SiteSettings, SocialProofItem } from "@/lib/data"
+import type { Article, SiteSettings, SocialProofItem, InternalAd } from "@/lib/data"
 
-type Tab = "settings" | "posts" | "social-proof"
+type Tab = "settings" | "posts" | "social-proof" | "seo" | "cards" | "ads"
 
 // ---- Toast Notification ----
 function Toast({
@@ -81,9 +86,24 @@ export function AdminDashboard() {
       icon: <Settings className="h-4 w-4" />,
     },
     {
+      key: "seo" as Tab,
+      label: "تهيئة المحركات",
+      icon: <SearchIcon className="h-4 w-4" />,
+    },
+    {
       key: "posts" as Tab,
       label: "ادارة المقالات",
       icon: <FileText className="h-4 w-4" />,
+    },
+    {
+      key: "cards" as Tab,
+      label: "مدير البطاقات",
+      icon: <CreditCard className="h-4 w-4" />,
+    },
+    {
+      key: "ads" as Tab,
+      label: "نظام الاعلانات",
+      icon: <Megaphone className="h-4 w-4" />,
     },
     {
       key: "social-proof" as Tab,
@@ -110,16 +130,24 @@ export function AdminDashboard() {
               </p>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={() => {
-              window.location.href = "/admin"
-            }}
-            className="flex items-center gap-2 rounded-lg border border-border bg-transparent px-3 py-1.5 text-xs text-muted-foreground transition-all hover:border-destructive/50 hover:text-destructive"
-          >
-            <LogOut className="h-3.5 w-3.5" />
-            خروج
-          </button>
+          <div className="flex items-center gap-3">
+            <div className="hidden items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-1.5 sm:flex">
+              <BarChart3 className="h-3.5 w-3.5 text-primary" />
+              <span className="text-[10px] font-medium text-primary">
+                {"إحصائيات المنصة"}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                window.location.href = "/admin"
+              }}
+              className="flex items-center gap-2 rounded-lg border border-border bg-transparent px-3 py-1.5 text-xs text-muted-foreground transition-all hover:border-destructive/50 hover:text-destructive"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+              خروج
+            </button>
+          </div>
         </div>
       </header>
 
@@ -157,6 +185,16 @@ export function AdminDashboard() {
               <SiteSettingsPanel showToast={showToast} />
             </motion.div>
           )}
+          {activeTab === "seo" && (
+            <motion.div
+              key="seo"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+            >
+              <SEOPanel showToast={showToast} />
+            </motion.div>
+          )}
           {activeTab === "posts" && (
             <motion.div
               key="posts"
@@ -165,6 +203,26 @@ export function AdminDashboard() {
               exit={{ opacity: 0, y: -10 }}
             >
               <PostManager showToast={showToast} />
+            </motion.div>
+          )}
+          {activeTab === "cards" && (
+            <motion.div
+              key="cards"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+            >
+              <CardManagerPanel showToast={showToast} />
+            </motion.div>
+          )}
+          {activeTab === "ads" && (
+            <motion.div
+              key="ads"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+            >
+              <AdSystemPanel showToast={showToast} />
             </motion.div>
           )}
           {activeTab === "social-proof" && (
@@ -194,14 +252,9 @@ export function AdminDashboard() {
   )
 }
 
-// ---- Site Settings Panel ----
-function SiteSettingsPanel({
-  showToast,
-}: {
-  showToast: (msg: string, type?: "success" | "error") => void
-}) {
+// ---- Hook to load/save settings ----
+function useSettings(showToast: (msg: string, type?: "success" | "error") => void) {
   const [settings, setSettings] = useState<SiteSettings | null>(null)
-  const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -218,20 +271,39 @@ function SiteSettingsPanel({
       })
   }, [showToast])
 
-  const handleSave = async () => {
-    if (!settings) return
-    setSaving(true)
+  const saveSettings = async (updated: SiteSettings) => {
     try {
       const res = await fetch("/api/settings", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(settings),
+        body: JSON.stringify(updated),
       })
       if (!res.ok) throw new Error()
+      setSettings(updated)
       showToast("تم حفظ الاعدادات بنجاح")
+      return true
     } catch {
       showToast("فشل في حفظ الاعدادات", "error")
+      return false
     }
+  }
+
+  return { settings, setSettings, loading, saveSettings }
+}
+
+// ---- Site Settings Panel ----
+function SiteSettingsPanel({
+  showToast,
+}: {
+  showToast: (msg: string, type?: "success" | "error") => void
+}) {
+  const { settings, setSettings, loading, saveSettings } = useSettings(showToast)
+  const [saving, setSaving] = useState(false)
+
+  const handleSave = async () => {
+    if (!settings) return
+    setSaving(true)
+    await saveSettings(settings)
     setSaving(false)
   }
 
@@ -272,6 +344,38 @@ function SiteSettingsPanel({
               className="w-full rounded-lg border border-border bg-secondary px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
               dir="ltr"
               placeholder="https://..."
+            />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-xs text-muted-foreground">
+              البريد الالكتروني للدعم
+            </label>
+            <input
+              type="email"
+              value={settings.supportEmail}
+              onChange={(e) =>
+                setSettings({ ...settings, supportEmail: e.target.value })
+              }
+              className="w-full rounded-lg border border-border bg-secondary px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
+              dir="ltr"
+              placeholder="Vorqenox@gmail.com"
+            />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-xs text-muted-foreground">
+              تسمية قسم الاشتراكات
+            </label>
+            <input
+              type="text"
+              value={settings.labels?.coursesLabel ?? "اشتراكات"}
+              onChange={(e) =>
+                setSettings({
+                  ...settings,
+                  labels: { ...settings.labels, coursesLabel: e.target.value },
+                })
+              }
+              className="w-full rounded-lg border border-border bg-secondary px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
+              dir="rtl"
             />
           </div>
         </div>
@@ -342,6 +446,47 @@ function SiteSettingsPanel({
             )
           )}
         </div>
+
+        {/* LinkedIn with toggle */}
+        <div className="mt-4 rounded-lg border border-border bg-secondary/50 p-4">
+          <div className="mb-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Linkedin className="h-4 w-4 text-primary" />
+              <span className="text-xs font-medium text-foreground">LinkedIn</span>
+            </div>
+            <ToggleSwitch
+              label=""
+              checked={settings.socialLinks.linkedinEnabled ?? false}
+              onChange={(v) =>
+                setSettings({
+                  ...settings,
+                  socialLinks: {
+                    ...settings.socialLinks,
+                    linkedinEnabled: v,
+                  },
+                })
+              }
+            />
+          </div>
+          {settings.socialLinks.linkedinEnabled && (
+            <input
+              type="text"
+              value={settings.socialLinks.linkedin ?? ""}
+              onChange={(e) =>
+                setSettings({
+                  ...settings,
+                  socialLinks: {
+                    ...settings.socialLinks,
+                    linkedin: e.target.value,
+                  },
+                })
+              }
+              className="w-full rounded-lg border border-border bg-secondary px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
+              dir="ltr"
+              placeholder="https://linkedin.com/in/..."
+            />
+          )}
+        </div>
       </SectionCard>
 
       <button
@@ -352,6 +497,585 @@ function SiteSettingsPanel({
       >
         <Save className="h-4 w-4" />
         {saving ? "جاري الحفظ..." : "حفظ الاعدادات"}
+      </button>
+    </div>
+  )
+}
+
+// ---- Global SEO Panel ----
+function SEOPanel({
+  showToast,
+}: {
+  showToast: (msg: string, type?: "success" | "error") => void
+}) {
+  const { settings, setSettings, loading, saveSettings } = useSettings(showToast)
+  const [saving, setSaving] = useState(false)
+
+  const handleSave = async () => {
+    if (!settings) return
+    setSaving(true)
+    await saveSettings(settings)
+    setSaving(false)
+  }
+
+  if (loading || !settings) return <LoadingSkeleton />
+
+  const seo = settings.seo ?? {
+    siteTitle: "",
+    metaDescription: "",
+    faviconUrl: "",
+    fbPixel: "",
+    googleAnalytics: "",
+  }
+
+  return (
+    <div className="space-y-6">
+      <SectionCard
+        title="تهيئة محركات البحث (SEO)"
+        icon={<SearchIcon className="h-4 w-4" />}
+      >
+        <div className="grid gap-4">
+          <div>
+            <label className="mb-1.5 block text-xs text-muted-foreground">
+              عنوان الموقع (Site Title)
+            </label>
+            <input
+              type="text"
+              value={seo.siteTitle}
+              onChange={(e) =>
+                setSettings({
+                  ...settings,
+                  seo: { ...seo, siteTitle: e.target.value },
+                })
+              }
+              className="w-full rounded-lg border border-border bg-secondary px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
+              dir="ltr"
+              placeholder="Vorqenox - Premium Apps & Tools"
+            />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-xs text-muted-foreground">
+              الوصف التعريفي (Meta Description)
+            </label>
+            <textarea
+              value={seo.metaDescription}
+              onChange={(e) =>
+                setSettings({
+                  ...settings,
+                  seo: { ...seo, metaDescription: e.target.value },
+                })
+              }
+              rows={3}
+              className="w-full resize-none rounded-lg border border-border bg-secondary px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
+              dir="ltr"
+              placeholder="Discover premium apps, games, AI tools..."
+            />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-xs text-muted-foreground">
+              رابط الايقونة (Favicon URL)
+            </label>
+            <input
+              type="text"
+              value={seo.faviconUrl}
+              onChange={(e) =>
+                setSettings({
+                  ...settings,
+                  seo: { ...seo, faviconUrl: e.target.value },
+                })
+              }
+              className="w-full rounded-lg border border-border bg-secondary px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
+              dir="ltr"
+              placeholder="https://..."
+            />
+          </div>
+        </div>
+      </SectionCard>
+
+      <SectionCard
+        title="بيكسلات التتبع (Tracking Pixels)"
+        icon={<BarChart3 className="h-4 w-4" />}
+      >
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className="mb-1.5 block text-xs text-muted-foreground">
+              Facebook Pixel ID
+            </label>
+            <input
+              type="text"
+              value={seo.fbPixel}
+              onChange={(e) =>
+                setSettings({
+                  ...settings,
+                  seo: { ...seo, fbPixel: e.target.value },
+                })
+              }
+              className="w-full rounded-lg border border-border bg-secondary px-3 py-2 text-sm font-mono text-foreground focus:border-primary focus:outline-none"
+              dir="ltr"
+              placeholder="1234567890"
+            />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-xs text-muted-foreground">
+              Google Analytics ID
+            </label>
+            <input
+              type="text"
+              value={seo.googleAnalytics}
+              onChange={(e) =>
+                setSettings({
+                  ...settings,
+                  seo: { ...seo, googleAnalytics: e.target.value },
+                })
+              }
+              className="w-full rounded-lg border border-border bg-secondary px-3 py-2 text-sm font-mono text-foreground focus:border-primary focus:outline-none"
+              dir="ltr"
+              placeholder="G-XXXXXXXXXX"
+            />
+          </div>
+        </div>
+      </SectionCard>
+
+      <button
+        type="button"
+        onClick={handleSave}
+        disabled={saving}
+        className="flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-bold text-primary-foreground transition-all hover:opacity-90 disabled:opacity-50"
+      >
+        <Save className="h-4 w-4" />
+        {saving ? "جاري الحفظ..." : "حفظ اعدادات SEO"}
+      </button>
+    </div>
+  )
+}
+
+// ---- Pro Card Manager (Neon Edition) ----
+function CardManagerPanel({
+  showToast,
+}: {
+  showToast: (msg: string, type?: "success" | "error") => void
+}) {
+  const { settings, setSettings, loading, saveSettings } = useSettings(showToast)
+  const [saving, setSaving] = useState(false)
+
+  const handleSave = async () => {
+    if (!settings) return
+    setSaving(true)
+    await saveSettings(settings)
+    setSaving(false)
+  }
+
+  if (loading || !settings) return <LoadingSkeleton />
+
+  const cardStyle = settings.cardStyle ?? {
+    neonIntensity: 50,
+    neonColor: "#00f3ff",
+    useGlobalColor: true,
+    showOnHome: true,
+    showOnArticles: true,
+  }
+
+  const intensity = cardStyle.neonIntensity
+  const currentColor = cardStyle.useGlobalColor ? settings.neonColor : cardStyle.neonColor
+
+  return (
+    <div className="space-y-6">
+      {/* Preview Card */}
+      <SectionCard
+        title="معاينة البطاقة"
+        icon={<CreditCard className="h-4 w-4" />}
+      >
+        <div className="flex justify-center py-6">
+          <div
+            className="relative w-72 overflow-hidden rounded-2xl border bg-card p-6"
+            style={{
+              borderColor: currentColor,
+              boxShadow: `0 0 ${intensity * 0.2}px ${currentColor}, 0 0 ${intensity * 0.6}px ${currentColor}${Math.round(intensity * 0.5).toString(16).padStart(2, "0")}`,
+              background: `linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 100%)`,
+              backdropFilter: "blur(20px)",
+            }}
+          >
+            <div
+              className="absolute inset-0 rounded-2xl opacity-20"
+              style={{
+                background: `linear-gradient(135deg, ${currentColor}22 0%, transparent 50%, ${currentColor}11 100%)`,
+              }}
+            />
+            <div className="relative">
+              <div className="mb-4 flex items-center gap-2">
+                <div
+                  className="flex h-8 w-8 items-center justify-center rounded-lg"
+                  style={{ backgroundColor: `${currentColor}20` }}
+                >
+                  <span
+                    className="text-sm font-bold"
+                    style={{ color: currentColor }}
+                  >
+                    V
+                  </span>
+                </div>
+                <span
+                  className="rounded-full px-2 py-0.5 text-xs font-medium"
+                  style={{
+                    backgroundColor: `${currentColor}15`,
+                    color: currentColor,
+                  }}
+                >
+                  Premium
+                </span>
+              </div>
+              <h3 className="mb-1 text-sm font-bold text-foreground">
+                نموذج بطاقة عرض
+              </h3>
+              <p className="mb-4 text-xs text-muted-foreground">
+                معاينة مباشرة لتنسيق البطاقات
+              </p>
+              <div
+                className="flex items-center gap-1 text-xs font-medium"
+                style={{ color: currentColor }}
+              >
+                <span>{"احصل الان"}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </SectionCard>
+
+      {/* Neon Controls */}
+      <SectionCard
+        title="تحكم النيون"
+        icon={<Palette className="h-4 w-4" />}
+      >
+        <div className="space-y-6">
+          {/* Intensity Slider */}
+          <div>
+            <div className="mb-2 flex items-center justify-between">
+              <label className="text-xs text-muted-foreground">
+                شدة النيون
+              </label>
+              <span className="text-xs font-mono text-primary">
+                {intensity}%
+              </span>
+            </div>
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={intensity}
+              onChange={(e) =>
+                setSettings({
+                  ...settings,
+                  cardStyle: {
+                    ...cardStyle,
+                    neonIntensity: Number(e.target.value),
+                  },
+                })
+              }
+              className="w-full accent-[hsl(186,100%,50%)]"
+            />
+            <div className="mt-1 flex justify-between text-[10px] text-muted-foreground">
+              <span>0</span>
+              <span>50</span>
+              <span>100</span>
+            </div>
+          </div>
+
+          {/* Color controls */}
+          <div className="flex items-center gap-4">
+            <ToggleSwitch
+              label="استخدام اللون العام"
+              checked={cardStyle.useGlobalColor}
+              onChange={(v) =>
+                setSettings({
+                  ...settings,
+                  cardStyle: { ...cardStyle, useGlobalColor: v },
+                })
+              }
+            />
+          </div>
+
+          {!cardStyle.useGlobalColor && (
+            <div className="flex items-center gap-4">
+              <input
+                type="color"
+                value={cardStyle.neonColor}
+                onChange={(e) =>
+                  setSettings({
+                    ...settings,
+                    cardStyle: { ...cardStyle, neonColor: e.target.value },
+                  })
+                }
+                className="h-10 w-16 cursor-pointer rounded-lg border border-border bg-secondary"
+              />
+              <input
+                type="text"
+                value={cardStyle.neonColor}
+                onChange={(e) =>
+                  setSettings({
+                    ...settings,
+                    cardStyle: { ...cardStyle, neonColor: e.target.value },
+                  })
+                }
+                className="w-32 rounded-lg border border-border bg-secondary px-3 py-2 text-sm font-mono text-foreground focus:border-primary focus:outline-none"
+                dir="ltr"
+              />
+            </div>
+          )}
+        </div>
+      </SectionCard>
+
+      {/* Visibility Toggles */}
+      <SectionCard
+        title="اعدادات الظهور"
+        icon={<Globe className="h-4 w-4" />}
+      >
+        <div className="grid grid-cols-2 gap-4">
+          <ToggleSwitch
+            label="اظهار في الرئيسية"
+            description="عرض البطاقات بتنسيق النيون في الصفحة الرئيسية"
+            checked={cardStyle.showOnHome}
+            onChange={(v) =>
+              setSettings({
+                ...settings,
+                cardStyle: { ...cardStyle, showOnHome: v },
+              })
+            }
+          />
+          <ToggleSwitch
+            label="اظهار في المقالات"
+            description="عرض البطاقات بتنسيق النيون في صفحات المقالات"
+            checked={cardStyle.showOnArticles}
+            onChange={(v) =>
+              setSettings({
+                ...settings,
+                cardStyle: { ...cardStyle, showOnArticles: v },
+              })
+            }
+          />
+        </div>
+      </SectionCard>
+
+      <button
+        type="button"
+        onClick={handleSave}
+        disabled={saving}
+        className="flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-bold text-primary-foreground transition-all hover:opacity-90 disabled:opacity-50"
+      >
+        <Save className="h-4 w-4" />
+        {saving ? "جاري الحفظ..." : "حفظ تنسيق البطاقات"}
+      </button>
+    </div>
+  )
+}
+
+// ---- Smart Ad System ----
+function AdSystemPanel({
+  showToast,
+}: {
+  showToast: (msg: string, type?: "success" | "error") => void
+}) {
+  const { settings, setSettings, loading, saveSettings } = useSettings(showToast)
+  const [saving, setSaving] = useState(false)
+
+  const handleSave = async () => {
+    if (!settings) return
+    setSaving(true)
+    await saveSettings(settings)
+    setSaving(false)
+  }
+
+  if (loading || !settings) return <LoadingSkeleton />
+
+  const adToggles = settings.adToggles ?? {
+    homeAds: true,
+    articleAds: true,
+    landingAds: true,
+  }
+
+  const internalAds = settings.internalAds ?? []
+
+  const addInternalAd = () => {
+    const newAd: InternalAd = {
+      id: Date.now().toString(),
+      title: "",
+      imageUrl: "",
+      cpaLink: "",
+      enabled: true,
+    }
+    setSettings({
+      ...settings,
+      internalAds: [...internalAds, newAd],
+    })
+  }
+
+  const updateAd = (index: number, field: keyof InternalAd, value: string | boolean) => {
+    const updated = [...internalAds]
+    updated[index] = { ...updated[index], [field]: value }
+    setSettings({ ...settings, internalAds: updated })
+  }
+
+  const removeAd = (index: number) => {
+    setSettings({
+      ...settings,
+      internalAds: internalAds.filter((_, i) => i !== index),
+    })
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Master Toggles */}
+      <SectionCard
+        title="مفاتيح رئيسية (Zero-Space Logic)"
+        icon={<Megaphone className="h-4 w-4" />}
+      >
+        <p className="mb-4 text-xs text-muted-foreground">
+          {"عند ايقاف الاعلانات، يتم اخفاء الحاوية بالكامل بدون فراغات (display: none)"}
+        </p>
+        <div className="grid grid-cols-3 gap-4">
+          <ToggleSwitch
+            label="الرئيسية"
+            description="اعلانات الصفحة الرئيسية"
+            checked={adToggles.homeAds}
+            onChange={(v) =>
+              setSettings({
+                ...settings,
+                adToggles: { ...adToggles, homeAds: v },
+              })
+            }
+          />
+          <ToggleSwitch
+            label="المقالات"
+            description="اعلانات صفحات المقالات"
+            checked={adToggles.articleAds}
+            onChange={(v) =>
+              setSettings({
+                ...settings,
+                adToggles: { ...adToggles, articleAds: v },
+              })
+            }
+          />
+          <ToggleSwitch
+            label="صفحة التحميل"
+            description="اعلانات صفحة Bridge"
+            checked={adToggles.landingAds}
+            onChange={(v) =>
+              setSettings({
+                ...settings,
+                adToggles: { ...adToggles, landingAds: v },
+              })
+            }
+          />
+        </div>
+      </SectionCard>
+
+      {/* Internal Ads Manager */}
+      <SectionCard
+        title="اعلانات داخلية"
+        icon={<CreditCard className="h-4 w-4" />}
+      >
+        <p className="mb-4 text-xs text-muted-foreground">
+          {"اضف بانرات اعلانية داخلية (صورة/فيديو + رابط CPA + عنوان)"}
+        </p>
+
+        {internalAds.length === 0 ? (
+          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-12">
+            <Megaphone className="mb-3 h-8 w-8 text-muted-foreground/50" />
+            <p className="text-sm text-muted-foreground">
+              لا توجد اعلانات داخلية
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {internalAds.map((ad, i) => (
+              <div
+                key={ad.id}
+                className="rounded-xl border border-border bg-secondary/50 p-4"
+              >
+                <div className="mb-3 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-medium text-muted-foreground">
+                      {"اعلان رقم "}
+                      {i + 1}
+                    </span>
+                    <ToggleSwitch
+                      label=""
+                      checked={ad.enabled}
+                      onChange={(v) => updateAd(i, "enabled", v)}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removeAd(i)}
+                    className="flex items-center gap-1 text-xs text-destructive hover:underline"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                    حذف
+                  </button>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <div>
+                    <label className="mb-1 block text-[10px] text-muted-foreground">
+                      العنوان
+                    </label>
+                    <input
+                      type="text"
+                      value={ad.title}
+                      onChange={(e) => updateAd(i, "title", e.target.value)}
+                      className="w-full rounded-lg border border-border bg-secondary px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
+                      dir="rtl"
+                      placeholder="عنوان الاعلان"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-[10px] text-muted-foreground">
+                      رابط الصورة/الفيديو
+                    </label>
+                    <input
+                      type="text"
+                      value={ad.imageUrl}
+                      onChange={(e) => updateAd(i, "imageUrl", e.target.value)}
+                      className="w-full rounded-lg border border-border bg-secondary px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
+                      dir="ltr"
+                      placeholder="https://..."
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-[10px] text-muted-foreground">
+                      رابط CPA
+                    </label>
+                    <input
+                      type="text"
+                      value={ad.cpaLink}
+                      onChange={(e) => updateAd(i, "cpaLink", e.target.value)}
+                      className="w-full rounded-lg border border-border bg-secondary px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
+                      dir="ltr"
+                      placeholder="https://..."
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={addInternalAd}
+          className="mt-4 flex items-center gap-2 rounded-xl bg-primary/10 px-4 py-2 text-xs font-medium text-primary transition-all hover:bg-primary/20"
+        >
+          <Plus className="h-4 w-4" />
+          اضافة اعلان داخلي
+        </button>
+      </SectionCard>
+
+      <button
+        type="button"
+        onClick={handleSave}
+        disabled={saving}
+        className="flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-bold text-primary-foreground transition-all hover:opacity-90 disabled:opacity-50"
+      >
+        <Save className="h-4 w-4" />
+        {saving ? "جاري الحفظ..." : "حفظ نظام الاعلانات"}
       </button>
     </div>
   )
@@ -1101,7 +1825,7 @@ function ToggleSwitch({
       className="flex flex-col items-start gap-2 rounded-lg border border-border bg-secondary/50 p-3 text-right transition-all hover:border-primary/30"
     >
       <div className="flex w-full items-center justify-between">
-        <span className="text-xs font-medium text-foreground">{label}</span>
+        {label && <span className="text-xs font-medium text-foreground">{label}</span>}
         <div
           className={`relative h-5 w-9 rounded-full transition-colors ${
             checked ? "bg-primary" : "bg-muted"
